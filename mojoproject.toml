@@ -1,0 +1,13 @@
+[project]
+authors = ["Brian Grenier <grenierb96@gmail.com>"]
+channels = ["https://conda.modular.com/max-nightly", "conda-forge"]
+name = "ChronoFlare"
+platforms = ["osx-arm64"]
+version = "0.1.0"
+
+[tasks]
+test="mojo test"
+format="mojo format duration test -l 80"
+
+[dependencies]
+max = "*"
