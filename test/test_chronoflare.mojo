@@ -62,13 +62,16 @@ def test_imod():
 def test_abs():
     assert_equal(abs(Seconds(-1)), Seconds(1))
 
+
 def test_pow():
     assert_equal(Seconds(2) ** Seconds(4), Seconds(16))
+
 
 def test_round():
     assert_equal(round(Seconds(2)), Seconds(2))
     assert_equal(round(Seconds(1.456)), Seconds(1.0))
     assert_equal(round(Seconds(1.135), 1), Seconds(1.1))
+
 
 def test_str():
     assert_equal(String(Seconds(10)), "10s")
@@ -81,6 +84,14 @@ def test_str():
 
     alias FakeTime = Time[Ratio[42, 25]()]
     assert_equal(String(FakeTime(20)), "20(42/25)s")
-    
-    alias EmojiTime = Time[Ratio[1, 420, '🔥']()]
-    assert_equal(String(EmojiTime(300)), '300🔥')
+
+    alias EmojiTime = Time[Ratio[1, 420, "🔥"]()]
+    assert_equal(String(EmojiTime(300)), "300🔥")
+
+
+def test_ratio_mul():
+    assert_true(Ratio[2, 3]() * Ratio[1, 6]() == Ratio[1, 9]())
+
+
+def test_ratio_div():
+    assert_true(Ratio[1, 4]() / Ratio[5, 4]() == Ratio[1, 5]())

@@ -7,7 +7,7 @@ version = "0.1.0"
 
 [tasks]
 test="mojo test"
-format="mojo format duration test -l 80"
+format="mojo format chronoflare test -l 80"
 
 [dependencies]
 max = "*"

@@ -1,4 +1,5 @@
 from builtin.string_literal import get_string_literal
+from math import gcd
 
 alias NanoSeconds = Time[Ratio.Nano, _]
 alias MicroSeconds = Time[Ratio.Micro, _]
@@ -35,7 +36,7 @@ struct Time[R: Ratio, DT: DType = DType.index](
     @always_inline
     fn __init__(out self, v: Self.Repr):
         self._value = v
-        
+
     fn __init__[OR: Ratio, //](out self, other: Time[OR, DT]):
         self = other.cast[R = Self.R]()
 
@@ -109,7 +110,7 @@ struct Time[R: Ratio, DT: DType = DType.index](
 
     @always_inline
     fn __pow__(self, exp: Self) -> Self:
-        return Self(self._value ** exp._value)
+        return Self(self._value**exp._value)
 
     @always_inline
     fn __round__(self) -> Self:
@@ -153,6 +154,9 @@ struct Time[R: Ratio, DT: DType = DType.index](
 struct Ratio[N: UInt, D: UInt = 1, suffix: StringLiteral = ""](
     Stringable, Writable
 ):
+    alias Num = N // gcd(N, D)
+    alias Den = D // gcd(N, D)
+
     alias Nano = Ratio[1, 1000000000, "ns"]()
     alias Micro = Ratio[1, 1000000, "µs"]()
     alias Milli = Ratio[1, 1000, "ms"]()
@@ -188,6 +192,28 @@ struct Ratio[N: UInt, D: UInt = 1, suffix: StringLiteral = ""](
     @always_inline
     fn __le__(self, other: Ratio) -> Bool:
         return N * other.D <= D * other.N
+
+    @always_inline
+    fn __mul__(
+        self,
+        other: Ratio,
+        out res: Ratio[
+            (Self.N * other.N) // gcd((Self.N * other.N), (Self.D * other.D)),
+            (Self.D * other.D) // gcd((Self.N * other.N), (Self.D * other.D)),
+        ],
+    ):
+        return __type_of(res)()
+
+    @always_inline
+    fn __truediv__(
+        self,
+        other: Ratio,
+        out res: Ratio[
+            (Self.N * other.D) // gcd((Self.N * other.D), (Self.D * other.N)),
+            (Self.D * other.N) // gcd((Self.N * other.D), (Self.D * other.N)),
+        ],
+    ):
+        return __type_of(res)()
 
     @always_inline
     fn __mul__[DT: DType](self, other: Scalar[DT]) -> Scalar[DT]:
