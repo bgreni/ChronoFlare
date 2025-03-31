@@ -90,8 +90,20 @@ def test_str():
 
 
 def test_ratio_mul():
-    assert_true(Ratio[2, 3]() * Ratio[1, 6]() == Ratio[1, 9]())
+    assert_true(Ratio[2, 3]() * Ratio[1, 6]() == Ratio[2, 18]())
+
+    alias R = Ratio.Milli * Ratio.Milli
+    # ops must preserve suffix string
+    assert_equal(R.suffix, "ms")
 
 
 def test_ratio_div():
-    assert_true(Ratio[1, 4]() / Ratio[5, 4]() == Ratio[1, 5]())
+    assert_true(Ratio[1, 4]() / Ratio[5, 4]() == Ratio[4, 20]())
+
+
+def test_ratio_simplify():
+    assert_true(Ratio[2, 18]().simplify() == Ratio[1, 9]())
+
+
+def test_ratio_with_suffix():
+    assert_true(Ratio[1, 2, "f"]().with_suffix["T"]() == Ratio[1, 2, "T"]())

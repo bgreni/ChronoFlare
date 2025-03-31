@@ -154,9 +154,6 @@ struct Time[R: Ratio, DT: DType = DType.index](
 struct Ratio[N: UInt, D: UInt = 1, suffix: StringLiteral = ""](
     Stringable, Writable
 ):
-    alias Num = N // gcd(N, D)
-    alias Den = D // gcd(N, D)
-
     alias Nano = Ratio[1, 1000000000, "ns"]()
     alias Micro = Ratio[1, 1000000, "µs"]()
     alias Milli = Ratio[1, 1000, "ms"]()
@@ -197,22 +194,18 @@ struct Ratio[N: UInt, D: UInt = 1, suffix: StringLiteral = ""](
     fn __mul__(
         self,
         other: Ratio,
-        out res: Ratio[
-            (Self.N * other.N) // gcd((Self.N * other.N), (Self.D * other.D)),
-            (Self.D * other.D) // gcd((Self.N * other.N), (Self.D * other.D)),
-        ],
+        out res: Ratio[(Self.N * other.N), (Self.D * other.D), suffix],
     ):
+        constrained[Self.suffix == other.suffix, "Ratio suffixes must match"]()
         return __type_of(res)()
 
     @always_inline
     fn __truediv__(
         self,
         other: Ratio,
-        out res: Ratio[
-            (Self.N * other.D) // gcd((Self.N * other.D), (Self.D * other.N)),
-            (Self.D * other.N) // gcd((Self.N * other.D), (Self.D * other.N)),
-        ],
+        out res: Ratio[(Self.N * other.D), (Self.D * other.N), suffix],
     ):
+        constrained[Self.suffix == other.suffix, "Ratio suffixes must match"]()
         return __type_of(res)()
 
     @always_inline
@@ -234,3 +227,16 @@ struct Ratio[N: UInt, D: UInt = 1, suffix: StringLiteral = ""](
     @always_inline
     fn __repr__(self) -> String:
         return String.write("(", N, "/", D, ")", suffix)
+
+    @always_inline
+    fn with_suffix[s: StringLiteral](self, out res: Ratio[Self.N, Self.D, s]):
+        return __type_of(res)()
+
+    @always_inline
+    fn simplify(
+        self,
+        out res: Ratio[
+            Self.N // gcd(Self.N, Self.D), Self.D // gcd(Self.N, Self.D)
+        ],
+    ):
+        return __type_of(res)()
