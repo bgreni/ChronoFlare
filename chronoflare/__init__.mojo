@@ -21,6 +21,7 @@ struct Time[R: Ratio, DT: DType = DType.index](
     alias Repr = Scalar[DT]
     var _value: Self.Repr
 
+
     @staticmethod
     fn max() -> Self:
         return Self(Self.Repr.MAX_FINITE)
@@ -37,7 +38,9 @@ struct Time[R: Ratio, DT: DType = DType.index](
     fn __init__(out self, v: Self.Repr):
         self._value = v
 
+    @implicit
     fn __init__[OR: Ratio, //](out self, other: Time[OR, DT]):
+        constrained[R <= OR]()
         self = other.cast[R = Self.R]()
 
     @always_inline
@@ -83,6 +86,23 @@ struct Time[R: Ratio, DT: DType = DType.index](
     @always_inline
     fn __mul__(self, other: Self) -> Self:
         return Self(self._value * other._value)
+
+    fn __add__[
+        OR: Ratio, //
+    ](
+        self,
+        other: Time[OR, DT],
+        out res: Time[
+            ((B[R < OR]() * R) | (B[~(R < OR)]() * OR))
+            .with_suffix[R.suffix if R < OR else OR.suffix](),
+            DT,
+        ],
+    ):
+        @parameter
+        if R < OR:
+            return __type_of(res)(self._value + other.cast[R=R]()._value)
+        else:
+            return __type_of(res)(self.cast[R=OR]()._value + other._value)
 
     @always_inline
     fn __imul__(mut self, other: Self):
@@ -150,6 +170,14 @@ struct Time[R: Ratio, DT: DType = DType.index](
 
 
 @value
+struct B[b: Bool]:
+
+    alias M = UInt(b)
+
+    fn __mul__[N: UInt, D: UInt, S: StringLiteral](self, other: Ratio[N, D, S], out res: Ratio[N * Self.M, D * Self.M, S]):
+        return __type_of(res)()
+
+@value
 @register_passable("trivial")
 struct Ratio[N: UInt, D: UInt = 1, suffix: StringLiteral = ""](
     Stringable, Writable
@@ -159,12 +187,15 @@ struct Ratio[N: UInt, D: UInt = 1, suffix: StringLiteral = ""](
     alias Milli = Ratio[1, 1000, "ms"]()
     alias Centi = Ratio[1, 100, "cs"]()
     alias Deci = Ratio[1, 10, "ds"]()
+    alias Null = Ratio[0, 0]()
     alias Base = Ratio[1, suffix="s"]()
     alias Deca = Ratio[10, 1, "das"]()
     alias Hecto = Ratio[100, 1, "hs"]()
     alias Kilo = Ratio[1000, 1, "ks"]()
     alias Mega = Ratio[1000000000, 1, "Ms"]()
     alias Giga = Ratio[1000000, 1, "Gs"]()
+
+    alias _GCD = gcd(N, D)
 
     @always_inline
     fn __eq__(self, other: Ratio) -> Bool:
@@ -196,7 +227,10 @@ struct Ratio[N: UInt, D: UInt = 1, suffix: StringLiteral = ""](
         other: Ratio,
         out res: Ratio[(Self.N * other.N), (Self.D * other.D), suffix],
     ):
-        constrained[Self.suffix == other.suffix, "Ratio suffixes must match"]()
+        return __type_of(res)()
+
+    @always_inline
+    fn __or__(self, other: Ratio, out res: Ratio[N | other.N, D | other.D, suffix]):
         return __type_of(res)()
 
     @always_inline
@@ -205,7 +239,6 @@ struct Ratio[N: UInt, D: UInt = 1, suffix: StringLiteral = ""](
         other: Ratio,
         out res: Ratio[(Self.N * other.D), (Self.D * other.N), suffix],
     ):
-        constrained[Self.suffix == other.suffix, "Ratio suffixes must match"]()
         return __type_of(res)()
 
     @always_inline
@@ -236,7 +269,7 @@ struct Ratio[N: UInt, D: UInt = 1, suffix: StringLiteral = ""](
     fn simplify(
         self,
         out res: Ratio[
-            Self.N // gcd(Self.N, Self.D), Self.D // gcd(Self.N, Self.D)
+            Self.N // Self._GCD, Self.D // Self._GCD, suffix
         ],
     ):
         return __type_of(res)()
