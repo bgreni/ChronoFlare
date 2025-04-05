@@ -7,6 +7,11 @@ def test_ctor():
     assert_equal(Seconds(Minutes(10)), Seconds(600))
 
 
+def test_cast():
+    assert_equal(Milliseconds(1).cast[R = Ratio.Nano](), NanoSeconds(1000000))
+    assert_equal(Seconds(600).cast[R = Minutes.R](), Minutes(10))
+
+
 def test_add():
     assert_equal(Seconds(10) + Seconds(20), Seconds(30))
     assert_equal(Seconds(5) + Minutes(10).cast[R = Seconds.R](), Seconds(605))
@@ -17,6 +22,9 @@ def test_iadd():
     var s = Seconds(10)
     s += Seconds(30)
     assert_equal(s, Seconds(40))
+
+    s += Minutes(10)
+    assert_equal(s, Seconds(640))
 
 
 def test_sub():

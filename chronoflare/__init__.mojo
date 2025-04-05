@@ -13,6 +13,16 @@ alias Months = Time[Ratio[2629746, suffix="months"](), _]
 alias Years = Time[Ratio[31557600, suffix="y"](), _]
 
 
+fn _implicit_conversion_check[L: Ratio, R: Ratio]():
+    constrained[
+        L <= R,
+        (
+            "Cannot implicitly convert lower timeframe duration to higher"
+            " timeframe"
+        ),
+    ]()
+
+
 @value
 @register_passable("trivial")
 struct Time[R: Ratio, DT: DType = DType.index](
@@ -39,7 +49,7 @@ struct Time[R: Ratio, DT: DType = DType.index](
 
     @implicit
     fn __init__[OR: Ratio, //](out self, other: Time[OR, DT]):
-        constrained[R <= OR]()
+        _implicit_conversion_check[R, OR]()
         self = other.cast[R = Self.R]()
 
     @always_inline
@@ -71,8 +81,9 @@ struct Time[R: Ratio, DT: DType = DType.index](
         return Self(self._value + other._value)
 
     @always_inline
-    fn __iadd__(mut self, other: Self):
-        self._value += other._value
+    fn __iadd__[OR: Ratio](mut self, other: Time[OR, DT]):
+        _implicit_conversion_check[R, OR]()
+        self._value += other.cast[R=R]()._value
 
     @always_inline
     fn __sub__(self, other: Self) -> Self:
@@ -99,7 +110,6 @@ struct Time[R: Ratio, DT: DType = DType.index](
             return __type_of(res)(self._value + other.cast[R=R]()._value)
         else:
             return __type_of(res)(self.cast[R=OR]()._value + other._value)
-
 
     @always_inline
     fn __mul__(self, other: Self.Repr) -> Self:
@@ -158,10 +168,8 @@ struct Time[R: Ratio, DT: DType = DType.index](
         @parameter
         if R == Self.R:
             return Time[R, DT](self.count())
-        if R > Self.R:
-            return Time[R, DT](((Self.R * self.count()) // R.N) // R.D)
-        else:
-            return Time[R, DT](((Self.R * self.count()) // R.N) * R.D)
+
+        return Time[R, DT]((Self.R / R) * self.count())
 
     @always_inline
     fn write_to[W: Writer](self, mut writer: W):
