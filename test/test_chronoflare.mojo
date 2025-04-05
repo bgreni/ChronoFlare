@@ -30,12 +30,13 @@ def test_isub():
 
 
 def test_mul():
-    assert_equal(Seconds(10) * Seconds(30), Seconds(300))
+    assert_equal(Seconds(10) * 30, Seconds(300))
+    assert_equal(30 * Seconds(10), Seconds(300))
 
 
 def test_imul():
     var s = Seconds(5)
-    s *= Seconds(10)
+    s *= 10
     assert_equal(s, Seconds(50))
 
 

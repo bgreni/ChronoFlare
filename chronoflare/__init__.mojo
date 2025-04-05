@@ -21,7 +21,6 @@ struct Time[R: Ratio, DT: DType = DType.index](
     alias Repr = Scalar[DT]
     var _value: Self.Repr
 
-
     @staticmethod
     fn max() -> Self:
         return Self(Self.Repr.MAX_FINITE)
@@ -83,18 +82,15 @@ struct Time[R: Ratio, DT: DType = DType.index](
     fn __isub__(mut self, other: Self):
         self._value -= other._value
 
-    @always_inline
-    fn __mul__(self, other: Self) -> Self:
-        return Self(self._value * other._value)
-
     fn __add__[
         OR: Ratio, //
     ](
         self,
         other: Time[OR, DT],
         out res: Time[
-            ((B[R < OR]() * R) | (B[~(R < OR)]() * OR))
-            .with_suffix[R.suffix if R < OR else OR.suffix](),
+            ((B[R < OR]() * R) | (B[~(R < OR)]() * OR)).with_suffix[
+                R.suffix if R < OR else OR.suffix
+            ](),
             DT,
         ],
     ):
@@ -104,9 +100,18 @@ struct Time[R: Ratio, DT: DType = DType.index](
         else:
             return __type_of(res)(self.cast[R=OR]()._value + other._value)
 
+
     @always_inline
-    fn __imul__(mut self, other: Self):
-        self._value *= other._value
+    fn __mul__(self, other: Self.Repr) -> Self:
+        return Self(self._value * other)
+
+    @always_inline
+    fn __rmul__(self, other: Self.Repr) -> Self:
+        return self * other
+
+    @always_inline
+    fn __imul__(mut self, other: Self.Repr):
+        self._value *= other
 
     @always_inline
     fn __truediv__(self, other: Self) -> Self:
@@ -171,11 +176,13 @@ struct Time[R: Ratio, DT: DType = DType.index](
 
 @value
 struct B[b: Bool]:
-
     alias M = UInt(b)
 
-    fn __mul__[N: UInt, D: UInt, S: StringLiteral](self, other: Ratio[N, D, S], out res: Ratio[N * Self.M, D * Self.M, S]):
+    fn __mul__[
+        N: UInt, D: UInt, S: StringLiteral
+    ](self, other: Ratio[N, D, S], out res: Ratio[N * Self.M, D * Self.M, S]):
         return __type_of(res)()
+
 
 @value
 @register_passable("trivial")
@@ -230,7 +237,9 @@ struct Ratio[N: UInt, D: UInt = 1, suffix: StringLiteral = ""](
         return __type_of(res)()
 
     @always_inline
-    fn __or__(self, other: Ratio, out res: Ratio[N | other.N, D | other.D, suffix]):
+    fn __or__(
+        self, other: Ratio, out res: Ratio[N | other.N, D | other.D, suffix]
+    ):
         return __type_of(res)()
 
     @always_inline
@@ -268,8 +277,6 @@ struct Ratio[N: UInt, D: UInt = 1, suffix: StringLiteral = ""](
     @always_inline
     fn simplify(
         self,
-        out res: Ratio[
-            Self.N // Self._GCD, Self.D // Self._GCD, suffix
-        ],
+        out res: Ratio[Self.N // Self._GCD, Self.D // Self._GCD, suffix],
     ):
         return __type_of(res)()
