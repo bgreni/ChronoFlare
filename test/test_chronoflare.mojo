@@ -14,7 +14,8 @@ def test_cast():
 
 def test_add():
     assert_equal(Seconds(10) + Seconds(20), Seconds(30))
-    assert_equal(Seconds(5) + Minutes(10).cast[R = Seconds.R](), Seconds(605))
+    assert_equal(Seconds(5) + Minutes(10), Seconds(605))
+    assert_equal(Minutes(10) + Seconds(5), Seconds(605))
     assert_equal(Seconds(600).cast[R = Minutes.R]() + Minutes(3), Minutes(13))
 
 
@@ -49,31 +50,31 @@ def test_imul():
 
 
 def test_truediv():
-    assert_equal(Seconds(10) / Seconds(5), Seconds(2))
+    assert_equal(Seconds(10) / 5, Seconds(2))
+    assert_equal(Seconds(5) / 2 , Seconds(2))
+
+    alias FS = Seconds[DType.float64]
+    assert_equal(FS(5) / 2.0, FS(2.5))
 
 
 def test_itruediv():
     var s = Seconds(20)
-    s /= Seconds(2)
+    s /= 2
     assert_equal(s, Seconds(10))
 
 
 def test_mod():
-    assert_equal(Seconds(20) % Seconds(7), Seconds(6))
+    assert_equal(Seconds(20) % 7, Seconds(6))
 
 
 def test_imod():
     var s = Seconds(30)
-    s %= Seconds(5)
+    s %= 5
     assert_equal(s, Seconds(0))
 
 
 def test_abs():
     assert_equal(abs(Seconds(-1)), Seconds(1))
-
-
-def test_pow():
-    assert_equal(Seconds(2) ** Seconds(4), Seconds(16))
 
 
 def test_round():

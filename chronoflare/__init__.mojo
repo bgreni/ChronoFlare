@@ -26,7 +26,7 @@ fn _implicit_conversion_check[L: Ratio, R: Ratio]():
 @value
 @register_passable("trivial")
 struct Time[R: Ratio, DT: DType = DType.index](
-    EqualityComparableCollectionElement, Stringable, Absable, Powable, Roundable
+    EqualityComparableCollectionElement, Stringable, Absable, Roundable
 ):
     alias Repr = Scalar[DT]
     var _value: Self.Repr
@@ -124,28 +124,32 @@ struct Time[R: Ratio, DT: DType = DType.index](
         self._value *= other
 
     @always_inline
-    fn __truediv__(self, other: Self) -> Self:
-        return Self(self._value // other._value)
+    fn __truediv__(self, other: Self.Repr) -> Self:
+        @parameter
+        if DT.is_integral():
+            return Self(self._value // other)
+        else:
+            return Self(self._value / other)
 
     @always_inline
-    fn __itruediv__(mut self, other: Self):
-        self._value //= other._value
+    fn __itruediv__(mut self, other: Self.Repr):
+        @parameter
+        if DT.is_integral():
+            self._value //= other
+        else:
+            self._value /= other
 
     @always_inline
-    fn __mod__(self, other: Self) -> Self:
-        return Self(self._value % other._value)
+    fn __mod__(self, other: Self.Repr) -> Self:
+        return Self(self._value % other)
 
     @always_inline
-    fn __imod__(mut self, other: Self):
-        self._value %= other._value
+    fn __imod__(mut self, other: Self.Repr):
+        self._value %= other
 
     @always_inline
     fn __abs__(self) -> Self:
         return Self(abs(self._value))
-
-    @always_inline
-    fn __pow__(self, exp: Self) -> Self:
-        return Self(self._value**exp._value)
 
     @always_inline
     fn __round__(self) -> Self:
