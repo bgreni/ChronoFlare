@@ -30,6 +30,8 @@ def test_iadd():
 
 def test_sub():
     assert_equal(Seconds(24) - Seconds(10), Seconds(14))
+    assert_equal(Seconds(600) - Minutes(1), Seconds(540))
+    assert_equal(Minutes(1) - Seconds(20), Seconds(40))
 
 
 def test_isub():

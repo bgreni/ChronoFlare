@@ -77,22 +77,30 @@ struct Time[R: Ratio, DT: DType = DType.index](
         return self._value <= other._value
 
     @always_inline
-    fn __add__(self, other: Self) -> Self:
-        return Self(self._value + other._value)
+    fn __sub__[
+        OR: Ratio, //
+    ](
+        self,
+        other: Time[OR, DT],
+        out res: Time[
+            ((B[R < OR]() * R) | (B[~(R < OR)]() * OR)).with_suffix[
+                R.suffix if R < OR else OR.suffix
+            ](),
+            DT,
+        ],
+    ):
+        @parameter
+        if R < OR:
+            return __type_of(res)(self._value - other.cast[R=R]()._value)
+        else:
+            return __type_of(res)(self.cast[R=OR]()._value - other._value)
 
     @always_inline
-    fn __iadd__[OR: Ratio](mut self, other: Time[OR, DT]):
+    fn __isub__[OR: Ratio](mut self, other: Time[OR, DT]):
         _implicit_conversion_check[R, OR]()
-        self._value += other.cast[R=R]()._value
+        self._value -= other.cast[R=R]()._value
 
     @always_inline
-    fn __sub__(self, other: Self) -> Self:
-        return Self(self._value - other._value)
-
-    @always_inline
-    fn __isub__(mut self, other: Self):
-        self._value -= other._value
-
     fn __add__[
         OR: Ratio, //
     ](
@@ -110,6 +118,11 @@ struct Time[R: Ratio, DT: DType = DType.index](
             return __type_of(res)(self._value + other.cast[R=R]()._value)
         else:
             return __type_of(res)(self.cast[R=OR]()._value + other._value)
+
+    @always_inline
+    fn __iadd__[OR: Ratio](mut self, other: Time[OR, DT]):
+        _implicit_conversion_check[R, OR]()
+        self._value += other.cast[R=R]()._value
 
     @always_inline
     fn __mul__(self, other: Self.Repr) -> Self:
